@@ -1,0 +1,1226 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# MFA Coverage Analysis\n\nComprehensive view of MFA enrollment, usage, and gaps across the organization with special focus on privileged accounts.\n\n---"
+      },
+      "name": "title"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "type": 4,
+            "isRequired": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2592000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "value": {
+              "durationMs": 604800000
+            },
+            "label": "Time Range"
+          }
+        ],
+        "style": "pills"
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Executive Summary"
+      },
+      "name": "summary-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "Active Users",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "blue"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "16",
+            "name": "active-users"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "Users with MFA",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "green"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "16",
+            "name": "mfa-users"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MFAUsers = SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| distinct UserPrincipalName;\nSigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| distinct UserPrincipalName\n| where UserPrincipalName !in (MFAUsers)\n| summarize Count = count()",
+              "size": 4,
+              "title": "Users Without MFA",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "redBright"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "16",
+            "name": "no-mfa-users"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let TotalUsers = SigninLogs\n| summarize Total = dcount(UserPrincipalName);\nlet MFAUsers = SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| summarize MFA = dcount(UserPrincipalName);\nTotalUsers\n| join MFAUsers on 1==1\n| extend Coverage = round(100.0 * MFA / Total, 1)\n| project Coverage = strcat(Coverage, \"%\")",
+              "size": 4,
+              "title": "MFA Coverage Rate",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Coverage",
+                  "formatter": 1
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "16",
+            "name": "mfa-coverage-rate"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| summarize Count = count()",
+              "size": 4,
+              "title": "Single-Factor Sign-ins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "orange"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "16",
+            "name": "single-factor-signins"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\n| where OperationName has \"security info\"\n| where OperationName has \"registered\"\n| summarize Count = dcount(tostring(TargetResources[0].userPrincipalName))",
+              "size": 4,
+              "title": "MFA Registrations",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "purple"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "16",
+            "name": "mfa-registrations"
+          }
+        ]
+      },
+      "name": "summary-tiles"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Privileged Users - MFA Status\n\nFocus on administrative accounts and their MFA posture. Privileged users are identified by directory role assignments."
+      },
+      "name": "privileged-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let PrivilegedRoles = dynamic([\"Global Administrator\", \"Privileged Role Administrator\", \"Security Administrator\", \"Exchange Administrator\", \"SharePoint Administrator\", \"User Administrator\", \"Helpdesk Administrator\", \"Application Administrator\", \"Cloud Application Administrator\", \"Privileged Authentication Administrator\", \"Authentication Administrator\", \"Conditional Access Administrator\", \"Intune Administrator\", \"Azure AD Joined Device Local Administrator\", \"Groups Administrator\", \"Password Administrator\"]);\nlet PrivilegedUsers = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName in (PrivilegedRoles)\n| extend UserPrincipalName = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserPrincipalName)\n| distinct UserPrincipalName, RoleName;\nPrivilegedUsers\n| summarize Roles = make_set(RoleName) by UserPrincipalName\n| join kind=leftouter (\n    SigninLogs\n    | where AuthenticationRequirement == \"multiFactorAuthentication\"\n    | summarize MFASignins = count(), LastMFA = max(TimeGenerated) by UserPrincipalName\n) on UserPrincipalName\n| join kind=leftouter (\n    SigninLogs\n    | where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n    | summarize SingleFactorSignins = count() by UserPrincipalName\n) on UserPrincipalName\n| extend \n    MFAStatus = iff(isnotempty(MFASignins), \"MFA Active\", \"No MFA Observed\"),\n    MFASignins = coalesce(MFASignins, 0),\n    SingleFactorSignins = coalesce(SingleFactorSignins, 0)\n| project \n    UserPrincipalName,\n    Roles,\n    MFAStatus,\n    MFASignins,\n    SingleFactorSignins,\n    LastMFA\n| order by MFAStatus asc, SingleFactorSignins desc",
+              "size": 2,
+              "title": "Privileged Users MFA Overview",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "MFAStatus",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "MFA Active",
+                          "representation": "green",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "No MFA Observed",
+                          "representation": "redBright",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "Default",
+                          "text": "{0}"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "columnMatch": "SingleFactorSignins",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "orange"
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "privileged-mfa-status"
+          }
+        ]
+      },
+      "name": "privileged-overview-group"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let PrivilegedRoles = dynamic([\"Global Administrator\", \"Privileged Role Administrator\", \"Security Administrator\", \"Exchange Administrator\", \"SharePoint Administrator\", \"User Administrator\", \"Helpdesk Administrator\", \"Application Administrator\", \"Cloud Application Administrator\", \"Privileged Authentication Administrator\", \"Authentication Administrator\", \"Conditional Access Administrator\", \"Intune Administrator\"]);\nlet PrivilegedUsers = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName in (PrivilegedRoles)\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| distinct UserUPN;\nSigninLogs\n| where UserPrincipalName in (PrivilegedUsers)\n| summarize \n    MFACount = countif(AuthenticationRequirement == \"multiFactorAuthentication\"),\n    SingleFactorCount = countif(AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0)\n| extend Total = MFACount + SingleFactorCount\n| project \n    Category = \"MFA\", Count = MFACount\n| union (\n    SigninLogs\n    | where UserPrincipalName in (PrivilegedUsers)\n    | summarize \n        MFACount = countif(AuthenticationRequirement == \"multiFactorAuthentication\"),\n        SingleFactorCount = countif(AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0)\n    | project Category = \"Single Factor\", Count = SingleFactorCount\n)",
+              "size": 2,
+              "title": "Privileged User Auth Distribution",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "MFA",
+                    "color": "green"
+                  },
+                  {
+                    "seriesName": "Single Factor",
+                    "color": "redBright"
+                  }
+                ]
+              }
+            },
+            "customWidth": "35",
+            "name": "privileged-auth-pie"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let PrivilegedRoles = dynamic([\"Global Administrator\", \"Privileged Role Administrator\", \"Security Administrator\", \"Exchange Administrator\", \"SharePoint Administrator\", \"User Administrator\", \"Helpdesk Administrator\", \"Application Administrator\", \"Cloud Application Administrator\", \"Privileged Authentication Administrator\", \"Authentication Administrator\", \"Conditional Access Administrator\", \"Intune Administrator\"]);\nAuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName in (PrivilegedRoles)\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| summarize Users = dcount(UserUPN) by RoleName\n| order by Users desc",
+              "size": 2,
+              "title": "Privileged Role Distribution",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart",
+              "chartSettings": {
+                "xAxis": "RoleName",
+                "yAxis": [
+                  "Users"
+                ],
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "Users",
+                    "color": "purple"
+                  }
+                ]
+              }
+            },
+            "customWidth": "65",
+            "name": "role-distribution"
+          }
+        ]
+      },
+      "name": "privileged-charts-group"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let PrivilegedRoles = dynamic([\"Global Administrator\", \"Privileged Role Administrator\", \"Security Administrator\", \"Exchange Administrator\", \"SharePoint Administrator\", \"User Administrator\", \"Helpdesk Administrator\", \"Application Administrator\", \"Cloud Application Administrator\", \"Privileged Authentication Administrator\", \"Authentication Administrator\", \"Conditional Access Administrator\", \"Intune Administrator\"]);\nlet PrivilegedUsers = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName in (PrivilegedRoles)\n| extend UserPrincipalName = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserPrincipalName)\n| summarize Roles = make_set(RoleName) by UserPrincipalName;\nSigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| join kind=inner PrivilegedUsers on UserPrincipalName\n| extend \n    City = tostring(LocationDetails.city),\n    Country = tostring(LocationDetails.countryOrRegion)\n| project \n    TimeGenerated,\n    UserPrincipalName,\n    Roles,\n    AppDisplayName,\n    IPAddress,\n    Location = strcat(City, \", \", Country),\n    ClientAppUsed,\n    UserAgent\n| order by TimeGenerated desc\n| take 50",
+        "size": 2,
+        "title": "Privileged Users - Single Factor Sign-ins (Last 50)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Roles",
+              "formatter": 7,
+              "formatOptions": {
+                "linkTarget": "CellDetails",
+                "linkIsContextBlade": true
+              }
+            }
+          ]
+        }
+      },
+      "name": "privileged-single-factor"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Global Admin Focus\n\nGlobal Administrators have the highest privilege level. This section provides detailed analysis of their MFA status."
+      },
+      "name": "global-admin-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let GlobalAdmins = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName == \"Global Administrator\"\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| distinct UserUPN;\nGlobalAdmins\n| summarize Count = count()",
+              "size": 4,
+              "title": "Total Global Admins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "purple"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "25",
+            "name": "ga-count"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let GlobalAdmins = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName == \"Global Administrator\"\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| distinct UserUPN;\nSigninLogs\n| where UserPrincipalName in (GlobalAdmins)\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "GAs with MFA",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "green"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "25",
+            "name": "ga-mfa"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let GlobalAdmins = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName == \"Global Administrator\"\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| distinct UserUPN;\nlet GAWithMFA = SigninLogs\n| where UserPrincipalName in (GlobalAdmins)\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| distinct UserPrincipalName;\nSigninLogs\n| where UserPrincipalName in (GlobalAdmins)\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| distinct UserPrincipalName\n| where UserPrincipalName !in (GAWithMFA)\n| summarize Count = count()",
+              "size": 4,
+              "title": "GAs Without MFA",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "redBright"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "25",
+            "name": "ga-no-mfa"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let GlobalAdmins = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName == \"Global Administrator\"\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| distinct UserUPN;\nSigninLogs\n| where UserPrincipalName in (GlobalAdmins)\n| summarize Count = count()",
+              "size": 4,
+              "title": "GA Sign-ins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "blue"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "25",
+            "name": "ga-signins"
+          }
+        ]
+      },
+      "name": "global-admin-tiles"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let GlobalAdmins = AuditLogs\n| where TimeGenerated > ago(90d)\n| where OperationName == \"Add member to role\"\n| extend RoleName = tostring(TargetResources[0].displayName)\n| where RoleName == \"Global Administrator\"\n| extend UserUPN = tostring(TargetResources[2].userPrincipalName)\n| where isnotempty(UserUPN)\n| distinct UserUPN;\nSigninLogs\n| where UserPrincipalName in (GlobalAdmins)\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| summarize \n    TotalSignins = count(),\n    MFASignins = countif(AuthenticationRequirement == \"multiFactorAuthentication\"),\n    SingleFactorSignins = countif(AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0),\n    FailedSignins = countif(ResultType != 0),\n    UniqueIPs = dcount(IPAddress),\n    LastSignin = max(TimeGenerated),\n    MFAMethods = make_set_if(MFAMethod, isnotempty(MFAMethod))\n    by UserPrincipalName\n| extend MFACoverage = round(100.0 * MFASignins / TotalSignins, 1)\n| project \n    UserPrincipalName,\n    TotalSignins,\n    MFACoverage = strcat(MFACoverage, \"%\"),\n    MFASignins,\n    SingleFactorSignins,\n    FailedSignins,\n    UniqueIPs,\n    MFAMethods,\n    LastSignin\n| order by SingleFactorSignins desc",
+        "size": 2,
+        "title": "Global Admin Sign-in Details",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "SingleFactorSignins",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "orange"
+              }
+            },
+            {
+              "columnMatch": "FailedSignins",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "redBright"
+              }
+            }
+          ]
+        }
+      },
+      "name": "ga-details"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## MFA Methods Analysis\n\nBreakdown of authentication methods used across the organization."
+      },
+      "name": "methods-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where isnotempty(MFAMethod)\n| summarize Count = count() by MFAMethod\n| order by Count desc",
+              "size": 2,
+              "title": "MFA Methods Distribution",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "PhoneAppNotification",
+                    "color": "green"
+                  },
+                  {
+                    "seriesName": "PhoneAppOTP",
+                    "color": "blue"
+                  },
+                  {
+                    "seriesName": "OneWaySMS",
+                    "color": "yellow"
+                  },
+                  {
+                    "seriesName": "TwoWayVoiceMobile",
+                    "color": "orange"
+                  },
+                  {
+                    "seriesName": "FIDO2",
+                    "color": "purple"
+                  },
+                  {
+                    "seriesName": "WindowsHelloForBusiness",
+                    "color": "teal"
+                  }
+                ]
+              }
+            },
+            "customWidth": "40",
+            "name": "mfa-methods-pie"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where isnotempty(MFAMethod)\n| summarize \n    Count = count(),\n    UniqueUsers = dcount(UserPrincipalName)\n    by MFAMethod\n| extend \n    MethodStrength = case(\n        MFAMethod in (\"FIDO2\", \"WindowsHelloForBusiness\", \"Passwordless\"), \"Phishing-Resistant\",\n        MFAMethod in (\"PhoneAppNotification\", \"PhoneAppOTP\"), \"Strong\",\n        MFAMethod in (\"OneWaySMS\", \"TwoWayVoiceMobile\", \"TwoWayVoiceOffice\"), \"Weak\",\n        \"Other\"\n    )\n| project \n    MFAMethod,\n    MethodStrength,\n    SigninCount = Count,\n    UniqueUsers\n| order by SigninCount desc",
+              "size": 2,
+              "title": "MFA Methods with Strength Rating",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "MethodStrength",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Phishing-Resistant",
+                          "representation": "green",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Strong",
+                          "representation": "blue",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Weak",
+                          "representation": "orange",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "Default",
+                          "text": "{0}"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "columnMatch": "SigninCount",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "blue"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "60",
+            "name": "mfa-methods-table"
+          }
+        ]
+      },
+      "name": "methods-overview-group"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where MFAMethod in (\"OneWaySMS\", \"TwoWayVoiceMobile\", \"TwoWayVoiceOffice\")\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "Users with Weak MFA (SMS/Voice)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "orange"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "33",
+            "name": "weak-mfa-count"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where MFAMethod in (\"PhoneAppNotification\", \"PhoneAppOTP\")\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "Users with Authenticator App",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "blue"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "33",
+            "name": "authenticator-count"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where MFAMethod in (\"FIDO2\", \"WindowsHelloForBusiness\", \"Passwordless\")\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "Users with Phishing-Resistant MFA",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "green"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "33",
+            "name": "phishing-resistant-count"
+          }
+        ]
+      },
+      "name": "method-strength-tiles"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where MFAMethod in (\"OneWaySMS\", \"TwoWayVoiceMobile\", \"TwoWayVoiceOffice\")\n| summarize \n    SigninCount = count(),\n    LastUse = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName, MFAMethod\n| order by SigninCount desc\n| take 25",
+        "size": 2,
+        "title": "Users Relying on Weak MFA Methods (Top 25)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "MFAMethod",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "Default",
+                    "representation": "orange",
+                    "text": "{0}"
+                  }
+                ]
+              }
+            },
+            {
+              "columnMatch": "SigninCount",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "orange"
+              }
+            }
+          ]
+        }
+      },
+      "name": "weak-mfa-users"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Users Without MFA Coverage\n\nUsers who have signed in successfully without MFA during the selected time period."
+      },
+      "name": "no-mfa-header"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let MFAUsers = SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| distinct UserPrincipalName;\nSigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| where UserPrincipalName !in (MFAUsers)\n| summarize \n    SigninCount = count(),\n    UniqueIPs = dcount(IPAddress),\n    Apps = make_set(AppDisplayName, 5),\n    LastSignin = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName\n| order by SigninCount desc\n| take 50\n| project \n    UserDisplayName,\n    UserPrincipalName,\n    SigninCount,\n    UniqueIPs,\n    Apps,\n    LastSignin",
+        "size": 2,
+        "title": "Users with Only Single-Factor Sign-ins (Top 50)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "SigninCount",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "redBright"
+              }
+            }
+          ]
+        }
+      },
+      "name": "no-mfa-users"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| summarize SingleFactorSignins = count() by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc",
+        "size": 0,
+        "title": "Single-Factor Sign-ins Over Time",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "linechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "SingleFactorSignins",
+              "color": "orange"
+            }
+          ]
+        }
+      },
+      "name": "single-factor-trend"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## MFA Registration Activity\n\nRecent MFA and security info registration events."
+      },
+      "name": "registration-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\n| where OperationName has \"security info\"\n| where OperationName has \"registered\"\n| summarize Registrations = count() by bin(TimeGenerated, 1d)\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "MFA Registrations Over Time",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "linechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "Registrations",
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "customWidth": "60",
+            "name": "registration-trend"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\n| where OperationName has \"security info\"\n| extend Method = tostring(AdditionalDetails[0].value)\n| where isnotempty(Method)\n| summarize Count = count() by Method\n| order by Count desc",
+              "size": 2,
+              "title": "Registered Methods",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "40",
+            "name": "registered-methods-pie"
+          }
+        ]
+      },
+      "name": "registration-group"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AuditLogs\n| where OperationName has_any (\"User registered security info\", \"User registered all required security info\", \"Admin registered security info\", \"User deleted security info\", \"Admin deleted security info\")\n| extend \n    UserUPN = tostring(TargetResources[0].userPrincipalName),\n    Method = tostring(AdditionalDetails[0].value),\n    InitiatedBy = coalesce(\n        tostring(InitiatedBy.user.userPrincipalName),\n        tostring(InitiatedBy.app.displayName),\n        \"Unknown\"\n    )\n| project \n    TimeGenerated,\n    OperationName,\n    UserUPN,\n    Method,\n    InitiatedBy,\n    Result\n| order by TimeGenerated desc\n| take 50",
+        "size": 2,
+        "title": "Recent MFA Registration Events (Last 50)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "OperationName",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "contains",
+                    "thresholdValue": "deleted",
+                    "representation": "redBright",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "contains",
+                    "thresholdValue": "registered",
+                    "representation": "green",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "Default",
+                    "text": "{0}"
+                  }
+                ]
+              }
+            },
+            {
+              "columnMatch": "Result",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "icons",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "success",
+                    "representation": "success",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "Default",
+                    "representation": "warning",
+                    "text": "{0}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "name": "registration-events"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Application MFA Coverage\n\nMFA enforcement by application - identify apps allowing single-factor authentication."
+      },
+      "name": "app-header"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where ResultType == 0\n| summarize \n    TotalSignins = count(),\n    MFASignins = countif(AuthenticationRequirement == \"multiFactorAuthentication\"),\n    SingleFactorSignins = countif(AuthenticationRequirement == \"singleFactorAuthentication\"),\n    UniqueUsers = dcount(UserPrincipalName)\n    by AppDisplayName\n| extend MFACoverage = round(100.0 * MFASignins / TotalSignins, 1)\n| where TotalSignins > 10\n| project \n    AppDisplayName,\n    TotalSignins,\n    MFACoverage = strcat(MFACoverage, \"%\"),\n    MFASignins,\n    SingleFactorSignins,\n    UniqueUsers\n| order by SingleFactorSignins desc\n| take 25",
+        "size": 2,
+        "title": "Application MFA Coverage (Apps with >10 sign-ins)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "SingleFactorSignins",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "orange"
+              }
+            },
+            {
+              "columnMatch": "MFASignins",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "green"
+              }
+            }
+          ]
+        }
+      },
+      "name": "app-mfa-coverage"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Conditional Access & MFA\n\nAnalysis of Conditional Access policies enforcing MFA."
+      },
+      "name": "ca-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| mv-expand CAPolicy = ConditionalAccessPolicies\n| where CAPolicy.result == \"success\"\n| extend PolicyName = tostring(CAPolicy.displayName)\n| summarize MFAEnforced = count() by PolicyName\n| order by MFAEnforced desc\n| take 10",
+              "size": 2,
+              "title": "Top CA Policies Enforcing MFA",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "MFAEnforced",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "green"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "50",
+            "name": "ca-mfa-policies"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| extend CAStatus = case(\n    ConditionalAccessStatus == \"notApplied\", \"No CA Applied\",\n    ConditionalAccessStatus == \"success\", \"CA Passed (No MFA Required)\",\n    ConditionalAccessStatus\n)\n| summarize Count = count() by CAStatus\n| order by Count desc",
+              "size": 2,
+              "title": "Single-Factor Sign-ins by CA Status",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "No CA Applied",
+                    "color": "redBright"
+                  },
+                  {
+                    "seriesName": "CA Passed (No MFA Required)",
+                    "color": "orange"
+                  }
+                ]
+              }
+            },
+            "customWidth": "50",
+            "name": "single-factor-ca"
+          }
+        ]
+      },
+      "name": "ca-group"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Legacy Authentication & MFA\n\nLegacy protocols that bypass MFA - high security risk."
+      },
+      "name": "legacy-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| where ClientAppUsed in (LegacyProtocols) and ResultType == 0\n| summarize Count = dcount(UserPrincipalName)",
+              "size": 4,
+              "title": "Users with Legacy Auth (Bypasses MFA)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "redBright"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "25",
+            "name": "legacy-users-count"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| where ClientAppUsed in (LegacyProtocols) and ResultType == 0\n| summarize Count = count()",
+              "size": 4,
+              "title": "Legacy Auth Sign-ins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "orange"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "25",
+            "name": "legacy-signins-count"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| where ClientAppUsed in (LegacyProtocols) and ResultType == 0\n| summarize Count = count() by ClientAppUsed\n| order by Count desc",
+              "size": 2,
+              "title": "Legacy Protocols Used",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "50",
+            "name": "legacy-protocols-pie"
+          }
+        ]
+      },
+      "name": "legacy-overview"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| where ClientAppUsed in (LegacyProtocols) and ResultType == 0\n| summarize \n    SigninCount = count(),\n    Protocols = make_set(ClientAppUsed),\n    LastUse = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName\n| order by SigninCount desc\n| take 25\n| project \n    UserDisplayName,\n    UserPrincipalName,\n    SigninCount,\n    Protocols,\n    LastUse",
+        "size": 2,
+        "title": "Users with Legacy Auth (MFA Bypass Risk) - Top 25",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "SigninCount",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "redBright"
+              }
+            }
+          ]
+        }
+      },
+      "name": "legacy-users"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## MFA Failures\n\nMFA challenges that failed - could indicate attacks or user issues."
+      },
+      "name": "failures-header"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where ResultType in (\"50074\", \"50076\", \"500121\", \"50158\")\n| extend FailureReason = case(\n    ResultType == \"50074\", \"MFA Required - User didn't complete\",\n    ResultType == \"50076\", \"MFA Required (Admin Policy)\",\n    ResultType == \"500121\", \"MFA Failed - Wrong code/timeout\",\n    ResultType == \"50158\", \"External Security Challenge Failed\",\n    \"Other MFA Failure\"\n)\n| summarize \n    FailureCount = count(),\n    LastFailure = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName, FailureReason\n| order by FailureCount desc\n| take 25",
+        "size": 2,
+        "title": "MFA Failures by User (Top 25)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "FailureCount",
+              "formatter": 8,
+              "formatOptions": {
+                "palette": "redBright"
+              }
+            },
+            {
+              "columnMatch": "FailureReason",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "contains",
+                    "thresholdValue": "Failed",
+                    "representation": "redBright",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "Default",
+                    "representation": "orange",
+                    "text": "{0}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "name": "mfa-failures"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where ResultType in (\"50074\", \"50076\", \"500121\", \"50158\")\n| summarize Failures = count() by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc",
+        "size": 0,
+        "title": "MFA Failures Over Time",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "linechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "Failures",
+              "color": "redBright"
+            }
+          ]
+        }
+      },
+      "name": "mfa-failures-trend"
+    }
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
