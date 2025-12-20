@@ -1,0 +1,1008 @@
+{
+    "version": "Notebook/1.0",
+    "items": [
+        {
+            "type": 1,
+            "content": {
+                "json": "# Sign-in Analyzer Dashboard\n---"
+            },
+            "name": "title",
+            "id": "909a49e8-4d37-4703-9f90-43511fba286d"
+        },
+        {
+            "type": 9,
+            "content": {
+                "version": "KqlParameterItem/1.0",
+                "parameters": [
+                    {
+                        "id": "time-range",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "TimeRange",
+                        "type": 4,
+                        "isRequired": true,
+                        "typeSettings": {
+                            "selectableValues": [
+                                {
+                                    "durationMs": 3600000
+                                },
+                                {
+                                    "durationMs": 14400000
+                                },
+                                {
+                                    "durationMs": 86400000
+                                },
+                                {
+                                    "durationMs": 259200000
+                                },
+                                {
+                                    "durationMs": 604800000
+                                },
+                                {
+                                    "durationMs": 1209600000
+                                },
+                                {
+                                    "durationMs": 2592000000
+                                }
+                            ],
+                            "allowCustom": true
+                        },
+                        "value": {
+                            "durationMs": 604800000
+                        },
+                        "label": "Time Range"
+                    },
+                    {
+                        "id": "risky-check-param",
+                        "version": "KqlParameterItem/1.0",
+                        "name": "HasRiskySignins",
+                        "type": 1,
+                        "isRequired": false,
+                        "query": "SigninLogs\n| where RiskLevelDuringSignIn in (\"low\", \"medium\", \"high\")\n| summarize Count = count()\n| extend HasData = iff(Count > 0, \"true\", \"\")\n| project HasData",
+                        "timeContextFromParameter": "TimeRange",
+                        "queryType": 0,
+                        "resourceType": "microsoft.operationalinsights/workspaces",
+                        "isHiddenWhenLocked": true
+                    }
+                ],
+                "style": "pills"
+            },
+            "name": "parameters",
+            "id": "131b17d2-9218-4e8e-a693-78d687b0f76e"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "## Overview"
+            },
+            "name": "overview-header",
+            "id": "6e949ffb-7c37-4637-8227-c3af7ce8ef94"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| summarize Count = count()",
+                            "size": 4,
+                            "title": "Total Sign-ins",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "tiles",
+                            "tileSettings": {
+                                "titleContent": {
+                                    "columnMatch": "Count",
+                                    "formatter": 12,
+                                    "formatOptions": {
+                                        "palette": "lightBlue"
+                                    }
+                                },
+                                "showBorder": false
+                            }
+                        },
+                        "customWidth": "20",
+                        "name": "total-signins",
+                        "id": "e82d2b70-89ee-4c2d-befa-d2d8e5d82c12"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where ResultType != 0\n| summarize Count = count()",
+                            "size": 4,
+                            "title": "Failed Sign-ins",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "tiles",
+                            "tileSettings": {
+                                "titleContent": {
+                                    "columnMatch": "Count",
+                                    "formatter": 12,
+                                    "formatOptions": {
+                                        "palette": "redBright"
+                                    }
+                                },
+                                "showBorder": false
+                            }
+                        },
+                        "customWidth": "20",
+                        "name": "failed-signins",
+                        "id": "593330d6-b57b-4ccc-813c-61c921a9cc3d"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where ConditionalAccessStatus == \"failure\"\n| summarize Count = count()",
+                            "size": 4,
+                            "title": "CA Blocks",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "tiles",
+                            "tileSettings": {
+                                "titleContent": {
+                                    "columnMatch": "Count",
+                                    "formatter": 12,
+                                    "formatOptions": {
+                                        "palette": "orange"
+                                    }
+                                },
+                                "showBorder": false
+                            }
+                        },
+                        "customWidth": "20",
+                        "name": "ca-blocks",
+                        "id": "86f3e720-70f1-4dfd-8240-b00838b784e1"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| summarize Count = dcount(UserPrincipalName)",
+                            "size": 4,
+                            "title": "Unique Users",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "tiles",
+                            "tileSettings": {
+                                "titleContent": {
+                                    "columnMatch": "Count",
+                                    "formatter": 12,
+                                    "formatOptions": {
+                                        "palette": "green"
+                                    }
+                                },
+                                "showBorder": false
+                            }
+                        },
+                        "customWidth": "20",
+                        "name": "unique-users",
+                        "id": "27a6a9c8-84b9-4730-9b4d-bbcdfbc65774"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where RiskLevelDuringSignIn in (\"low\", \"medium\", \"high\")\n| summarize Count = count()",
+                            "size": 4,
+                            "title": "Risky Sign-ins",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "tiles",
+                            "tileSettings": {
+                                "titleContent": {
+                                    "columnMatch": "Count",
+                                    "formatter": 12,
+                                    "formatOptions": {
+                                        "palette": "magenta"
+                                    }
+                                },
+                                "showBorder": false
+                            }
+                        },
+                        "customWidth": "20",
+                        "name": "risky-signins-count",
+                        "id": "64d2d693-90df-4e1e-a01c-47ada39bafe1"
+                    }
+                ]
+            },
+            "name": "overview-tiles",
+            "id": "80226662-c48b-40a8-b748-d77c5994a651"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## Risky Sign-ins"
+            },
+            "conditionalVisibility": {
+                "parameterName": "HasRiskySignins",
+                "comparison": "isNotEqualTo",
+                "value": ""
+            },
+            "name": "risky-header",
+            "id": "f39e19c9-79c5-462a-b1c7-6f9b72c3a454"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where RiskLevelDuringSignIn in (\"low\", \"medium\", \"high\")\n| summarize SignInCount = count() by RiskLevelDuringSignIn\n| order by case(\n    RiskLevelDuringSignIn == \"high\", 1,\n    RiskLevelDuringSignIn == \"medium\", 2,\n    RiskLevelDuringSignIn == \"low\", 3,\n    4)",
+                            "size": 2,
+                            "title": "Sign-ins by Risk Level",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "high",
+                                        "color": "redBright"
+                                    },
+                                    {
+                                        "seriesName": "medium",
+                                        "color": "orange"
+                                    },
+                                    {
+                                        "seriesName": "low",
+                                        "color": "yellow"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "35",
+                        "name": "risk-level-chart",
+                        "id": "dc8ef9d1-f3f9-43a6-9095-5379dc6b076c"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where RiskLevelDuringSignIn in (\"low\", \"medium\", \"high\")\n| summarize \n    SignInCount = count(),\n    HighRisk = countif(RiskLevelDuringSignIn == \"high\"),\n    MediumRisk = countif(RiskLevelDuringSignIn == \"medium\"),\n    LowRisk = countif(RiskLevelDuringSignIn == \"low\"),\n    LatestSignIn = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName\n| project \n    UserDisplayName,\n    UserPrincipalName,\n    SignInCount,\n    HighRisk,\n    MediumRisk,\n    LowRisk,\n    LatestSignIn\n| order by HighRisk desc, MediumRisk desc, SignInCount desc\n| take 25",
+                            "size": 2,
+                            "title": "Users with Risky Sign-ins (Top 25)",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "table",
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "HighRisk",
+                                        "formatter": 8,
+                                        "formatOptions": {
+                                            "palette": "redBright"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "MediumRisk",
+                                        "formatter": 8,
+                                        "formatOptions": {
+                                            "palette": "orange"
+                                        }
+                                    },
+                                    {
+                                        "columnMatch": "LowRisk",
+                                        "formatter": 8,
+                                        "formatOptions": {
+                                            "palette": "yellow"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "65",
+                        "name": "risky-users-list",
+                        "id": "3767d797-58a4-471d-8701-fc6db5a7b3db"
+                    }
+                ]
+            },
+            "conditionalVisibility": {
+                "parameterName": "HasRiskySignins",
+                "comparison": "isNotEqualTo",
+                "value": ""
+            },
+            "name": "risky-signins-group",
+            "id": "af4f9b96-32c7-48a3-a427-1bbab896e7b7"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## Geographic Analysis"
+            },
+            "name": "geo-header",
+            "id": "d53662f3-f959-45e4-8537-57d94c8da0dd"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| extend \n    Latitude = toreal(LocationDetails.geoCoordinates.latitude),\n    Longitude = toreal(LocationDetails.geoCoordinates.longitude),\n    City = tostring(LocationDetails.city),\n    State = tostring(LocationDetails.state),\n    Country = tostring(LocationDetails.countryOrRegion)\n| where isnotempty(Latitude) and isnotempty(Longitude)\n| summarize \n    SignInCount = count(),\n    UniqueUsers = dcount(UserPrincipalName),\n    FailedCount = countif(ResultType != 0)\n    by City, State, Country, Latitude, Longitude\n| project \n    Location = strcat(City, \", \", State, \", \", Country),\n    City,\n    Country,\n    SignInCount,\n    UniqueUsers,\n    FailedCount,\n    Latitude,\n    Longitude",
+                "size": 0,
+                "title": "Sign-in Locations (City Level)",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "map",
+                "mapSettings": {
+                    "locInfo": "LatLong",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "sizeSettings": "SignInCount",
+                    "sizeAggregation": "Sum",
+                    "labelSettings": "City",
+                    "legendMetric": "SignInCount",
+                    "legendAggregation": "Sum",
+                    "itemColorSettings": {
+                        "nodeColorField": "SignInCount",
+                        "colorAggregation": "Sum",
+                        "type": "heatmap",
+                        "heatmapPalette": "coldHot"
+                    }
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ],
+                "headingLevel": 3
+            },
+            "name": "geo-map",
+            "id": "d8d552c8-6459-461a-813b-1e4189c5a04a"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| extend \n    City = tostring(LocationDetails.city),\n    Country = tostring(LocationDetails.countryOrRegion)\n| summarize \n    SignInCount = count(),\n    UniqueUsers = dcount(UserPrincipalName),\n    FailedCount = countif(ResultType != 0),\n    SuccessRate = round(100.0 * countif(ResultType == 0) / count(), 1)\n    by City, Country\n| order by SignInCount desc\n| take 15\n| project \n    Location = strcat(City, \", \", Country),\n    SignInCount,\n    UniqueUsers,\n    FailedCount,\n    SuccessRate = strcat(SuccessRate, \"%\")",
+                "size": 2,
+                "title": "Top 15 Sign-in Locations",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "table",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "SignInCount",
+                            "formatter": 4,
+                            "formatOptions": {
+                                "palette": "blue"
+                            }
+                        },
+                        {
+                            "columnMatch": "FailedCount",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "redBright"
+                            }
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "top-locations-table",
+            "id": "d860e8be-f7e7-4923-882b-328e69d305a0"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## Failed Sign-ins Analysis"
+            },
+            "name": "failed-header",
+            "id": "3a30a207-1bb7-42ac-ae51-491ebf0c091f"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where ResultType != 0\n| summarize FailedCount = count() by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc",
+                            "size": 0,
+                            "title": "Failed Sign-ins Over Time",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "linechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "FailedCount",
+                                        "color": "redBright"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "60",
+                        "name": "failed-trend",
+                        "id": "bd1b71e9-f880-4082-b65c-f2fb8fe76774"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "let ErrorCodes = datatable(ResultType: string, Description: string) [\n    \"50126\", \"Invalid username or password\",\n    \"50053\", \"Account locked\",\n    \"50057\", \"Account disabled\",\n    \"50055\", \"Password expired\",\n    \"50074\", \"MFA required\",\n    \"50076\", \"MFA required (admin policy)\",\n    \"53003\", \"Blocked by CA\",\n    \"530032\", \"Blocked - security default\",\n    \"530034\", \"Blocked - CA location policy\",\n    \"50158\", \"External security challenge not met\",\n    \"50140\", \"Keep me signed in interrupt\",\n    \"50144\", \"Password change required\",\n    \"500121\", \"MFA failed\",\n    \"50097\", \"Device auth required\",\n    \"70044\", \"Session expired\"\n];\nSigninLogs\n| where ResultType != 0\n| extend ResultTypeStr = tostring(ResultType)\n| summarize Count = count() by ResultTypeStr\n| join kind=leftouter ErrorCodes on $left.ResultTypeStr == $right.ResultType\n| project \n    ErrorCode = ResultTypeStr,\n    Description = coalesce(Description, \"Other/Unknown\"),\n    Count\n| order by Count desc\n| take 10",
+                            "size": 2,
+                            "title": "Top Failure Reasons",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "table",
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "Count",
+                                        "formatter": 4,
+                                        "formatOptions": {
+                                            "palette": "redBright"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "40",
+                        "name": "failure-reasons",
+                        "id": "75fc552b-93b1-4a0a-b53b-1cb6ec75f670"
+                    }
+                ]
+            },
+            "name": "failed-group",
+            "id": "86eaccc2-f3f7-4a26-9c39-abfa0b98b4b4"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| where ResultType != 0\n| summarize \n    FailedCount = count(),\n    DistinctIPs = dcount(IPAddress),\n    LatestAttempt = max(TimeGenerated),\n    TopError = any(ResultType)\n    by UserPrincipalName, UserDisplayName\n| order by FailedCount desc\n| take 20\n| project\n    UserDisplayName,\n    UserPrincipalName,\n    FailedCount,\n    DistinctIPs,\n    LatestAttempt,\n    TopError",
+                "size": 2,
+                "title": "Users with Most Failed Sign-ins (Top 20)",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "table",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "FailedCount",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "redBright"
+                            }
+                        },
+                        {
+                            "columnMatch": "DistinctIPs",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "orange"
+                            }
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "failed-users",
+            "id": "f82989ef-4306-441e-b2ef-61a816a289cd"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## Conditional Access"
+            },
+            "name": "ca-header",
+            "id": "ef4ddb29-f838-42ff-b5fb-16236f61d94f"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| summarize Count = count() by ConditionalAccessStatus\n| extend Status = case(\n    ConditionalAccessStatus == \"success\", \"Passed\",\n    ConditionalAccessStatus == \"failure\", \"Blocked\",\n    ConditionalAccessStatus == \"notApplied\", \"Not Applied\",\n    ConditionalAccessStatus\n)",
+                            "size": 2,
+                            "title": "CA Policy Results",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "Passed",
+                                        "color": "green"
+                                    },
+                                    {
+                                        "seriesName": "Blocked",
+                                        "color": "redBright"
+                                    },
+                                    {
+                                        "seriesName": "Not Applied",
+                                        "color": "gray"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "35",
+                        "name": "ca-status-pie",
+                        "id": "61e6893d-b569-4f21-b8b3-0acb2ab298a5"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where ConditionalAccessStatus == \"failure\"\n| mv-expand CAPolicy = ConditionalAccessPolicies\n| where CAPolicy.result == \"failure\"\n| summarize BlockCount = count() by PolicyName = tostring(CAPolicy.displayName)\n| order by BlockCount desc\n| take 10",
+                            "size": 2,
+                            "title": "Top Blocking CA Policies",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "table",
+                            "gridSettings": {
+                                "formatters": [
+                                    {
+                                        "columnMatch": "BlockCount",
+                                        "formatter": 4,
+                                        "formatOptions": {
+                                            "palette": "orange"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "65",
+                        "name": "ca-blocking-policies",
+                        "id": "da045eb2-6e9f-4aa3-87f8-c3780e3c719c"
+                    }
+                ]
+            },
+            "name": "ca-overview-group",
+            "id": "e6a4cd98-24e2-43e1-a2c0-4d7550880a56"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| where ConditionalAccessStatus == \"failure\"\n| summarize \n    BlockCount = count(),\n    LatestBlock = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName, AppDisplayName\n| order by BlockCount desc\n| take 20",
+                "size": 2,
+                "title": "Users Blocked by CA (Top 20)",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "table",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "BlockCount",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "orange"
+                            }
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "ca-blocked-users",
+            "id": "f4250972-9a70-4cf8-b15e-ab6b022625f6"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## Legacy Authentication"
+            },
+            "name": "legacy-header",
+            "id": "551160db-ecff-4092-9cd0-29b1098e622d"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| extend IsLegacy = ClientAppUsed in (LegacyProtocols)\n| where IsLegacy == true\n| summarize LegacyCount = count() by bin(TimeGenerated, 1d)\n| order by TimeGenerated asc",
+                            "size": 0,
+                            "title": "Legacy Auth Usage Over Time",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "linechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "LegacyCount",
+                                        "color": "purple"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "60",
+                        "name": "legacy-trend",
+                        "id": "a373d4ff-5853-4a8e-82ed-53122663b6ee"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| where ClientAppUsed in (LegacyProtocols)\n| summarize Count = count() by ClientAppUsed\n| order by Count desc",
+                            "size": 2,
+                            "title": "Legacy Auth by Protocol",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "IMAP4",
+                                        "color": "purple"
+                                    },
+                                    {
+                                        "seriesName": "POP3",
+                                        "color": "magenta"
+                                    },
+                                    {
+                                        "seriesName": "Authenticated SMTP",
+                                        "color": "pink"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "40",
+                        "name": "legacy-protocols",
+                        "id": "39d24c93-7d17-4ea3-83b1-9bce93ae3df6"
+                    }
+                ]
+            },
+            "name": "legacy-overview-group",
+            "id": "1aaeab0d-873b-4b5e-bdd0-d98e5f626111"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "let LegacyProtocols = dynamic([\"Authenticated SMTP\", \"Autodiscover\", \"Exchange ActiveSync\", \"Exchange Online PowerShell\", \"Exchange Web Services\", \"IMAP4\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"Other clients\", \"POP3\", \"Reporting Web Services\"]);\nSigninLogs\n| where ClientAppUsed in (LegacyProtocols)\n| summarize \n    SignInCount = count(),\n    Protocols = make_set(ClientAppUsed),\n    LatestUse = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName\n| order by SignInCount desc\n| take 20\n| project\n    UserDisplayName,\n    UserPrincipalName,\n    SignInCount,\n    Protocols,\n    LatestUse",
+                "size": 2,
+                "title": "Users Using Legacy Auth (Top 20)",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "table",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "SignInCount",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "purple"
+                            }
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "legacy-users",
+            "id": "31af8b91-f93e-4674-9a5e-9d73031a9c95"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## MFA Analysis"
+            },
+            "name": "mfa-header",
+            "id": "a24442aa-971e-4e0f-a8d8-b51804b3edad"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| where AuthenticationRequirement == \"multiFactorAuthentication\"\n| extend MFAMethod = tostring(MfaDetail.authMethod)\n| where isnotempty(MFAMethod)\n| summarize Count = count() by MFAMethod\n| order by Count desc",
+                            "size": 2,
+                            "title": "MFA Methods Used",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "PhoneAppNotification",
+                                        "color": "green"
+                                    },
+                                    {
+                                        "seriesName": "PhoneAppOTP",
+                                        "color": "blue"
+                                    },
+                                    {
+                                        "seriesName": "OneWaySMS",
+                                        "color": "yellow"
+                                    },
+                                    {
+                                        "seriesName": "TwoWayVoiceMobile",
+                                        "color": "orange"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "40",
+                        "name": "mfa-methods-pie",
+                        "id": "afd7969c-6e56-467c-8016-64d6e8ee2333"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| summarize \n    TotalSignins = count(),\n    MFARequired = countif(AuthenticationRequirement == \"multiFactorAuthentication\"),\n    SingleFactor = countif(AuthenticationRequirement == \"singleFactorAuthentication\")\n| extend \n    MFAPercent = round(100.0 * MFARequired / TotalSignins, 1),\n    SinglePercent = round(100.0 * SingleFactor / TotalSignins, 1)\n| project \n    [\"MFA Required\"] = strcat(MFARequired, \" (\", MFAPercent, \"%)\"),\n    [\"Single Factor\"] = strcat(SingleFactor, \" (\", SinglePercent, \"%)\"),\n    [\"Total\"] = TotalSignins",
+                            "size": 4,
+                            "title": "MFA vs Single Factor",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "tiles",
+                            "tileSettings": {
+                                "showBorder": true
+                            }
+                        },
+                        "customWidth": "60",
+                        "name": "mfa-ratio",
+                        "id": "618b6f31-4ada-47ad-9d6b-1686de48ca91"
+                    }
+                ]
+            },
+            "name": "mfa-overview-group",
+            "id": "b5c9ef12-7ff0-4e20-842a-40a7668606a8"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| where AuthenticationRequirement == \"singleFactorAuthentication\" and ResultType == 0\n| summarize \n    SingleFactorCount = count(),\n    Apps = make_set(AppDisplayName, 5),\n    LatestSignIn = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName\n| order by SingleFactorCount desc\n| take 20",
+                "size": 2,
+                "title": "Users with Single Factor Sign-ins (Successful)",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "table",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "SingleFactorCount",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "yellow"
+                            }
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "single-factor-users",
+            "id": "754512c4-8f52-4977-89e1-1e06b8a0cfd8"
+        },
+        {
+            "type": 1,
+            "content": {
+                "json": "---\n## Device Compliance"
+            },
+            "name": "device-header",
+            "id": "7e39145b-b72a-4fe7-aad5-075b53c8d3ce"
+        },
+        {
+            "type": 12,
+            "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| extend IsManaged = tostring(DeviceDetail.isManaged)\n| extend DeviceStatus = case(\n    IsManaged == \"true\", \"Managed\",\n    IsManaged == \"false\", \"Unmanaged\",\n    \"Unknown\"\n)\n| summarize Count = count() by DeviceStatus",
+                            "size": 2,
+                            "title": "Managed vs Unmanaged",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "Managed",
+                                        "color": "green"
+                                    },
+                                    {
+                                        "seriesName": "Unmanaged",
+                                        "color": "redBright"
+                                    },
+                                    {
+                                        "seriesName": "Unknown",
+                                        "color": "gray"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "33",
+                        "name": "managed-pie",
+                        "id": "6072cefa-9005-4909-abbb-bb09718b6332"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| extend IsCompliant = tostring(DeviceDetail.isCompliant)\n| extend ComplianceStatus = case(\n    IsCompliant == \"true\", \"Compliant\",\n    IsCompliant == \"false\", \"Non-Compliant\",\n    \"Unknown/Unregistered\"\n)\n| summarize Count = count() by ComplianceStatus",
+                            "size": 2,
+                            "title": "Device Compliance Status",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "Compliant",
+                                        "color": "green"
+                                    },
+                                    {
+                                        "seriesName": "Non-Compliant",
+                                        "color": "redBright"
+                                    },
+                                    {
+                                        "seriesName": "Unknown/Unregistered",
+                                        "color": "gray"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "33",
+                        "name": "compliance-pie",
+                        "id": "0b2f740f-b57c-4dda-8246-1f6a3191ab24"
+                    },
+                    {
+                        "type": 3,
+                        "content": {
+                            "version": "KqlItem/1.0",
+                            "query": "SigninLogs\n| extend TrustType = tostring(DeviceDetail.trustType)\n| extend JoinType = case(\n    TrustType == \"AzureAd\", \"Azure AD Joined\",\n    TrustType == \"Hybrid\", \"Hybrid Joined\",\n    TrustType == \"Workplace\", \"Workplace Joined\",\n    \"Unregistered\"\n)\n| summarize Count = count() by JoinType",
+                            "size": 2,
+                            "title": "Device Join Type",
+                            "timeContextFromParameter": "TimeRange",
+                            "queryType": 0,
+                            "resourceType": "microsoft.operationalinsights/workspaces",
+                            "visualization": "piechart",
+                            "chartSettings": {
+                                "seriesLabelSettings": [
+                                    {
+                                        "seriesName": "Azure AD Joined",
+                                        "color": "blue"
+                                    },
+                                    {
+                                        "seriesName": "Hybrid Joined",
+                                        "color": "teal"
+                                    },
+                                    {
+                                        "seriesName": "Workplace Joined",
+                                        "color": "orange"
+                                    },
+                                    {
+                                        "seriesName": "Unregistered",
+                                        "color": "gray"
+                                    }
+                                ]
+                            }
+                        },
+                        "customWidth": "33",
+                        "name": "join-type-pie",
+                        "id": "10933990-9db9-4a89-80a3-5b019d9da5ed"
+                    }
+                ]
+            },
+            "name": "device-overview-group",
+            "id": "ec5ba0eb-d368-4e9f-9836-5c8e5242b695"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| where DeviceDetail.isManaged != true or isempty(DeviceDetail.isManaged)\n| summarize \n    SignInCount = count(),\n    Devices = dcount(tostring(DeviceDetail.deviceId)),\n    LatestSignIn = max(TimeGenerated)\n    by UserPrincipalName, UserDisplayName\n| order by SignInCount desc\n| take 20\n| project\n    UserDisplayName,\n    UserPrincipalName,\n    SignInCount,\n    Devices,\n    LatestSignIn",
+                "size": 2,
+                "title": "Sign-ins from Unmanaged Devices (Top 20)",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "table",
+                "gridSettings": {
+                    "formatters": [
+                        {
+                            "columnMatch": "SignInCount",
+                            "formatter": 8,
+                            "formatOptions": {
+                                "palette": "redBright"
+                            }
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "unmanaged-users",
+            "id": "4f04bcda-f145-4a7c-899d-d9c300c0ea8c"
+        },
+        {
+            "type": 3,
+            "content": {
+                "version": "KqlItem/1.0",
+                "query": "SigninLogs\n| extend OS = tostring(DeviceDetail.operatingSystem)\n| where isnotempty(OS)\n| summarize Count = count() by OS\n| order by Count desc\n| take 10",
+                "size": 2,
+                "title": "Sign-ins by OS",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "visualization": "barchart",
+                "chartSettings": {
+                    "xAxis": "OS",
+                    "yAxis": [
+                        "Count"
+                    ],
+                    "seriesLabelSettings": [
+                        {
+                            "seriesName": "Count",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                "crossComponentResources": [
+                    "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+                ]
+            },
+            "name": "os-breakdown",
+            "id": "46a9dbf8-8c5b-41d9-948e-afd6ddfceb68"
+        }
+    ],
+    "fallbackResourceIds": [
+        "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+    ],
+    "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+    "context": {
+        "ownerId": "/subscriptions/872213ef-0cce-48d2-b50b-0d5eba3387bb/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel-logs"
+    }
+}
