@@ -1,0 +1,730 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# User Compromise Investigation\n\nRapid triage workbook for investigating suspected user compromise. Surfaces sign-in patterns, identity changes, app consents, and M365 activity for a single user in one view.\n\n---"
+      },
+      "name": "title"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "SelectedUser",
+            "type": 2,
+            "isRequired": true,
+            "query": "SigninLogs\n| where TimeGenerated > ago(30d)\n| summarize by UserPrincipalName, UserDisplayName\n| order by UserDisplayName asc\n| project Value = UserPrincipalName, Label = strcat(UserDisplayName, \" (\", UserPrincipalName, \")\")",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "typeSettings": {
+              "showDefault": false
+            },
+            "label": "User",
+            "value": "exp-emil.dosen@peps.org"
+          },
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "type": 4,
+            "isRequired": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2592000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "value": {
+              "durationMs": 604800000
+            },
+            "label": "Time Range"
+          }
+        ],
+        "style": "pills"
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Overview"
+      },
+      "name": "overview-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| summarize Count = count()",
+              "size": 4,
+              "title": "Total Sign-ins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "blue"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "20",
+            "name": "total-signins"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| where ResultType != 0\n| summarize Count = count()",
+              "size": 4,
+              "title": "Failed Sign-ins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "redBright"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "20",
+            "name": "failed-signins"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| summarize Count = dcount(IPAddress)",
+              "size": 4,
+              "title": "Unique IPs",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "orange"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "20",
+            "name": "unique-ips"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| extend City = tostring(LocationDetails.city)\n| summarize Count = dcount(City)",
+              "size": 4,
+              "title": "Unique Locations",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "purple"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "20",
+            "name": "unique-locations"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| where RiskLevelDuringSignIn in (\"low\", \"medium\", \"high\")\n| summarize Count = count()",
+              "size": 4,
+              "title": "Risky Sign-ins",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "magenta"
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "20",
+            "name": "risky-signins"
+          }
+        ]
+      },
+      "name": "overview-tiles"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Sign-in Analysis"
+      },
+      "name": "signin-header"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| extend \n    Latitude = toreal(LocationDetails.geoCoordinates.latitude),\n    Longitude = toreal(LocationDetails.geoCoordinates.longitude),\n    City = tostring(LocationDetails.city),\n    Country = tostring(LocationDetails.countryOrRegion)\n| where isnotempty(Latitude) and isnotempty(Longitude)\n| summarize \n    SignInCount = count(),\n    FailedCount = countif(ResultType != 0),\n    LatestSignIn = max(TimeGenerated)\n    by City, Country, Latitude, Longitude\n| project \n    Location = strcat(City, \", \", Country),\n    SignInCount,\n    FailedCount,\n    LatestSignIn,\n    Latitude,\n    Longitude",
+        "size": 0,
+        "title": "Sign-in Locations",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "map",
+        "mapSettings": {
+          "locInfo": "LatLong",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "sizeSettings": "SignInCount",
+          "sizeAggregation": "Sum",
+          "labelSettings": "Location",
+          "legendMetric": "SignInCount",
+          "legendAggregation": "Sum",
+          "zoom": 2,
+          "itemColorSettings": {
+            "nodeColorField": "FailedCount",
+            "colorAggregation": "Sum",
+            "type": "heatmap",
+            "heatmapPalette": "coldHot"
+          }
+        }
+      },
+      "name": "signin-map"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| summarize \n    Success = countif(ResultType == 0),\n    Failed = countif(ResultType != 0)\n    by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "Sign-in Timeline",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "linechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "Success",
+                    "color": "green"
+                  },
+                  {
+                    "seriesName": "Failed",
+                    "color": "redBright"
+                  }
+                ]
+              }
+            },
+            "customWidth": "70",
+            "name": "signin-timeline"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| extend IsManaged = tostring(DeviceDetail.isManaged)\n| extend DeviceStatus = case(\n    IsManaged == \"true\", \"Managed\",\n    IsManaged == \"false\", \"Unmanaged\",\n    \"Unknown\"\n)\n| summarize Count = count() by DeviceStatus",
+              "size": 2,
+              "title": "Device Management Status",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "Managed",
+                    "color": "green"
+                  },
+                  {
+                    "seriesName": "Unmanaged",
+                    "color": "redBright"
+                  },
+                  {
+                    "seriesName": "Unknown",
+                    "color": "gray"
+                  }
+                ]
+              }
+            },
+            "customWidth": "30",
+            "name": "device-status-pie"
+          }
+        ]
+      },
+      "name": "signin-charts-group"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| extend \n    City = tostring(LocationDetails.city),\n    Country = tostring(LocationDetails.countryOrRegion),\n    OS = tostring(DeviceDetail.operatingSystem),\n    Browser = tostring(DeviceDetail.browser),\n    IsManaged = iff(tostring(DeviceDetail.isManaged) == \"true\", \"Yes\", \"No\")\n| project \n    TimeGenerated,\n    IPAddress,\n    Location = strcat(City, \", \", Country),\n    AppDisplayName,\n    OS,\n    Browser,\n    IsManaged,\n    ConditionalAccessStatus,\n    ResultType,\n    ResultDescription,\n    RiskLevelDuringSignIn\n| order by TimeGenerated desc",
+        "size": 2,
+        "title": "Sign-in Details",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "ResultType",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "icons",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "0",
+                    "representation": "success",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "Default",
+                    "representation": "error",
+                    "text": "{0}"
+                  }
+                ]
+              }
+            },
+            {
+              "columnMatch": "RiskLevelDuringSignIn",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "high",
+                    "representation": "redBright",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "medium",
+                    "representation": "orange",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "low",
+                    "representation": "yellow",
+                    "text": "{0}"
+                  },
+                  {
+                    "operator": "Default",
+                    "text": "{0}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "name": "signin-details"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Red Flags"
+      },
+      "name": "redflags-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let UserSignins = SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| where ResultType == 0\n| extend \n    Latitude = toreal(LocationDetails.geoCoordinates.latitude),\n    Longitude = toreal(LocationDetails.geoCoordinates.longitude),\n    City = tostring(LocationDetails.city),\n    Country = tostring(LocationDetails.countryOrRegion)\n| where isnotempty(Latitude) and isnotempty(Longitude)\n| project TimeGenerated, City, Country, Latitude, Longitude, IPAddress;\nUserSignins\n| order by TimeGenerated asc\n| extend PrevTime = prev(TimeGenerated), PrevLat = prev(Latitude), PrevLon = prev(Longitude), PrevCity = prev(City)\n| where isnotempty(PrevTime)\n| extend \n    TimeDiffMins = datetime_diff('minute', TimeGenerated, PrevTime),\n    DistanceKm = geo_distance_2points(Longitude, Latitude, PrevLon, PrevLat) / 1000\n| where TimeDiffMins > 0\n| extend SpeedKmh = DistanceKm / (TimeDiffMins / 60.0)\n| where SpeedKmh > 500 and DistanceKm > 100\n| project \n    Time = TimeGenerated,\n    FromCity = PrevCity,\n    ToCity = City,\n    TimeDiffMins = round(TimeDiffMins, 0),\n    DistanceKm = round(DistanceKm, 0),\n    SpeedKmh = round(SpeedKmh, 0),\n    IPAddress\n| order by Time desc",
+              "size": 2,
+              "title": "Impossible Travel (>500 km/h)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "SpeedKmh",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "redBright"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "60",
+            "name": "impossible-travel"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let HistoricalLocations = SigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| where TimeGenerated between (ago(30d) .. ago({TimeRange:seconds}s))\n| extend City = tostring(LocationDetails.city), Country = tostring(LocationDetails.countryOrRegion)\n| where isnotempty(City)\n| distinct City, Country;\nSigninLogs\n| where UserPrincipalName == \"{SelectedUser}\"\n| extend City = tostring(LocationDetails.city), Country = tostring(LocationDetails.countryOrRegion)\n| where isnotempty(City)\n| summarize \n    SignInCount = count(),\n    FirstSeen = min(TimeGenerated),\n    LatestSignIn = max(TimeGenerated)\n    by City, Country\n| join kind=leftanti HistoricalLocations on City, Country\n| project \n    Location = strcat(City, \", \", Country),\n    SignInCount,\n    FirstSeen,\n    LatestSignIn\n| order by FirstSeen desc",
+              "size": 2,
+              "title": "New Locations (not seen in prior 30d)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "SignInCount",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "orange"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "40",
+            "name": "new-locations"
+          }
+        ]
+      },
+      "name": "redflags-group"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Identity Changes"
+      },
+      "name": "identity-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\n| where OperationName has_any (\"User registered security info\", \"User registered all required security info\", \"Admin registered security info\", \"User deleted security info\", \"Admin deleted security info\")\n| extend UPN = tostring(TargetResources[0].userPrincipalName)\n| where UPN == \"{SelectedUser}\"\n| extend \n    Method = tostring(AdditionalDetails[0].value),\n    InitiatedBy = coalesce(\n        tostring(InitiatedBy.user.userPrincipalName),\n        tostring(InitiatedBy.app.displayName),\n        \"Unknown\"\n    )\n| project \n    TimeGenerated,\n    OperationName,\n    Method,\n    InitiatedBy,\n    Result\n| order by TimeGenerated desc",
+              "size": 2,
+              "title": "MFA/Security Info Changes",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "OperationName",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "deleted",
+                          "representation": "redBright",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "Default",
+                          "text": "{0}"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "50",
+            "name": "mfa-changes"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "AuditLogs\n| where OperationName has_any (\"Change user password\", \"Reset user password\", \"Change password (self-service)\", \"Reset password (self-service)\", \"Reset password (by admin)\")\n| extend UPN = tostring(TargetResources[0].userPrincipalName)\n| where UPN == \"{SelectedUser}\"\n| extend \n    InitiatedBy = coalesce(\n        tostring(InitiatedBy.user.userPrincipalName),\n        tostring(InitiatedBy.app.displayName),\n        \"Unknown\"\n    )\n| project \n    TimeGenerated,\n    OperationName,\n    InitiatedBy,\n    Result\n| order by TimeGenerated desc",
+              "size": 2,
+              "title": "Password Changes",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "customWidth": "50",
+            "name": "password-changes"
+          }
+        ]
+      },
+      "name": "identity-group"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## App Consent"
+      },
+      "name": "consent-header"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AuditLogs\n| where OperationName == \"Consent to application\"\n| extend UPN = tostring(InitiatedBy.user.userPrincipalName)\n| where UPN == \"{SelectedUser}\"\n| extend \n    AppName = tostring(TargetResources[0].displayName),\n    AppId = tostring(TargetResources[0].id)\n| mv-expand ModifiedProp = TargetResources[0].modifiedProperties\n| where tostring(ModifiedProp.displayName) == \"ConsentContext.IsAdminConsent\" or tostring(ModifiedProp.displayName) == \"ConsentAction.Permissions\"\n| extend \n    PropName = tostring(ModifiedProp.displayName),\n    PropValue = tostring(ModifiedProp.newValue)\n| summarize \n    Permissions = make_set_if(PropValue, PropName == \"ConsentAction.Permissions\"),\n    IsAdminConsent = make_set_if(PropValue, PropName == \"ConsentContext.IsAdminConsent\")\n    by TimeGenerated, AppName, AppId, CorrelationId\n| project \n    TimeGenerated,\n    AppName,\n    Permissions = tostring(Permissions[0]),\n    IsAdminConsent = tostring(IsAdminConsent[0])\n| order by TimeGenerated desc",
+        "size": 2,
+        "title": "OAuth App Consents by User",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table"
+      },
+      "name": "app-consent"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Email Activity"
+      },
+      "name": "email-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where Operation in (\"New-InboxRule\", \"Set-InboxRule\", \"Enable-InboxRule\")\n| extend Parameters = parse_json(Parameters)\n| extend \n    RuleName = tostring(Parameters[0].Value),\n    RuleDetails = tostring(Parameters)\n| project \n    TimeGenerated,\n    Operation,\n    RuleName,\n    RuleDetails,\n    ClientIP\n| order by TimeGenerated desc",
+              "size": 2,
+              "title": "Inbox Rules Created/Modified",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Operation",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "New-InboxRule",
+                          "representation": "orange",
+                          "text": "{0}"
+                        },
+                        {
+                          "operator": "Default",
+                          "text": "{0}"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "50",
+            "name": "inbox-rules"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where Operation in (\"Set-Mailbox\", \"Add-MailboxPermission\", \"Add-RecipientPermission\", \"Set-MailboxFolderPermission\")\n| extend Parameters = parse_json(Parameters)\n| project \n    TimeGenerated,\n    Operation,\n    Parameters = tostring(Parameters),\n    ClientIP\n| order by TimeGenerated desc",
+              "size": 2,
+              "title": "Mailbox Permissions/Forwarding",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "customWidth": "50",
+            "name": "mailbox-permissions"
+          }
+        ]
+      },
+      "name": "email-group"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## SharePoint/OneDrive Activity"
+      },
+      "name": "sharepoint-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where OfficeWorkload in (\"SharePoint\", \"OneDrive\")\n| where Operation == \"FileDownloaded\"\n| summarize DownloadCount = count() by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "File Download Volume",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "linechart",
+              "chartSettings": {
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "DownloadCount",
+                    "color": "blue"
+                  }
+                ]
+              }
+            },
+            "customWidth": "50",
+            "name": "download-trend"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where OfficeWorkload in (\"SharePoint\", \"OneDrive\")\n| where Operation in (\"SharingSet\", \"AddedToSecureLink\", \"AnonymousLinkCreated\", \"SecureLinkCreated\", \"SharingInvitationCreated\")\n| project \n    TimeGenerated,\n    Operation,\n    SourceFileName,\n    Site_Url,\n    TargetUserOrGroupName,\n    ClientIP\n| order by TimeGenerated desc",
+              "size": 2,
+              "title": "External Sharing Events",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "customWidth": "50",
+            "name": "external-sharing"
+          }
+        ]
+      },
+      "name": "sharepoint-group"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where OfficeWorkload in (\"SharePoint\", \"OneDrive\")\n| where Operation == \"FileDownloaded\"\n| project \n    TimeGenerated,\n    SourceFileName,\n    SourceRelativeUrl,\n    ClientIP,\n    UserAgent\n| order by TimeGenerated desc\n| take 50",
+        "size": 2,
+        "title": "Recent File Downloads (last 50)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table"
+      },
+      "name": "recent-downloads"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "---\n## Teams Activity"
+      },
+      "name": "teams-header"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where OfficeWorkload == \"MicrosoftTeams\"\n| where Operation in (\"FileDownloaded\", \"FileUploaded\")\n| project \n    TimeGenerated,\n    Operation,\n    SourceFileName,\n    ClientIP\n| order by TimeGenerated desc\n| take 25",
+              "size": 2,
+              "title": "Teams File Activity",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "customWidth": "50",
+            "name": "teams-files"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\n| where UserId == \"{SelectedUser}\"\n| where OfficeWorkload == \"MicrosoftTeams\"\n| where Operation in (\"MemberAdded\", \"MemberRoleChanged\")\n| extend \n    Members = tostring(Members),\n    TeamName = tostring(TeamName)\n| project \n    TimeGenerated,\n    Operation,\n    TeamName,\n    Members,\n    ClientIP\n| order by TimeGenerated desc",
+              "size": 2,
+              "title": "Teams Membership Changes",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "customWidth": "50",
+            "name": "teams-membership"
+          }
+        ]
+      },
+      "name": "teams-group"
+    }
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
