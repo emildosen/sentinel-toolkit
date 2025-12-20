@@ -1,0 +1,17 @@
+// Alert when emergency access account has been used
+// Run every 5 minutes and lookup from last 5 minutes
+
+let EmergencyAccessAccounts = dynamic(["emergencyaccess1@example.com", "emergencyaccess2@example.com"]);
+SigninLogs
+| where UserPrincipalName in~ (EmergencyAccessAccounts)
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    UserId,
+    IPAddress,
+    Location = strcat(LocationDetails.city, ", ", LocationDetails.countryOrRegion),
+    AppDisplayName,
+    ResultType,
+    ResultDescription,
+    DeviceDetail,
+    ConditionalAccessStatus
