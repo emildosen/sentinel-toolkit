@@ -29,8 +29,12 @@ def define_env(env):
                 template_path = item / "template.json"
 
                 if readme_path.exists():
+                    # Extract title from first line of README (## Title)
+                    first_line = readme_path.read_text().split('\n')[0]
+                    name = first_line.lstrip('#').strip()
+
                     workbooks.append({
-                        "name": item.name.replace("-", " ").title(),
+                        "name": name,
                         "folder": item.name,
                         "folder_path": str(item.relative_to(repo_root)),
                         "has_screenshot": screenshot_path.exists(),

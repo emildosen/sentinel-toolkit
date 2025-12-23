@@ -66,13 +66,14 @@ jobs:
             name=$(basename "$kql" .kql)
             category=$(dirname "$kql" | xargs basename)
             mkdir -p "docs/queries/$category"
-            echo "# ${name//-/ }" > "docs/queries/$category/${name}.md"
-            echo "" >> "docs/queries/$category/${name}.md"
-            echo '```kusto' >> "docs/queries/$category/${name}.md"
-            cat "$kql" >> "docs/queries/$category/${name}.md"
-            echo '```' >> "docs/queries/$category/${name}.md"
-            echo "" >> "docs/queries/$category/${name}.md"
-            echo "[:material-github: View on GitHub](https://github.com/emildosen/sentinel-toolkit/blob/main/${kql}){ .md-button }" >> "docs/queries/$category/${name}.md"
+            {
+              echo "# ${name//-/ }"
+              echo ""
+              echo '```kusto'
+              cat "$kql"
+              echo ""
+              echo '```'
+            } > "docs/queries/$category/${name}.md"
           done
 
       - name: Build documentation
