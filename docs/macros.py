@@ -56,7 +56,9 @@ def define_env(env):
 
             queries.append({
                 "name": kql_file.stem.replace("-", " ").replace("_", " ").title(),
+                "slug": kql_file.stem,
                 "category": category.replace("-", " ").replace("_", " ").title(),
+                "category_slug": category,
                 "file_path": str(kql_file),
                 "relative_path": str(kql_file.relative_to(repo_root)),
             })

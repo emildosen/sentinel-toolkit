@@ -1,29 +1,19 @@
 # Workbooks Gallery
 
-Browse the collection of Microsoft Sentinel workbooks. Click any screenshot to enlarge.
+Browse the collection of Microsoft Sentinel workbooks.
 
 <div class="workbook-gallery" markdown>
 
 {% for workbook in get_workbooks() %}
 <div class="workbook-card" markdown>
 
-## {{ workbook.name }}
+### [{{ workbook.name }}]({{ workbook.folder }}.md)
 
 {% if workbook.has_screenshot %}
-[![{{ workbook.name }}]({{ workbook.screenshot_path }}){ .workbook-thumbnail }]({{ workbook.screenshot_path }})
+[![{{ workbook.name }}]({{ workbook.screenshot_path }}){ .workbook-thumbnail }]({{ workbook.folder }}.md)
 {% else %}
-![Screenshot Coming Soon](../assets/placeholder.svg){ .workbook-thumbnail .placeholder }
+[![{{ workbook.name }}](../assets/placeholder.svg){ .workbook-thumbnail .placeholder }]({{ workbook.folder }}.md)
 {% endif %}
-
-<div class="workbook-content" markdown>
-
-{{ read_workbook_readme(workbook.folder) }}
-
-</div>
-
-[:material-download: View Template on GitHub](https://github.com/emildosen/sentinel-toolkit/blob/main/{{ workbook.folder_path }}/template.json){ .md-button }
-
----
 
 </div>
 {% endfor %}

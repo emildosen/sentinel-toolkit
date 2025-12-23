@@ -9,15 +9,7 @@ Ready-to-use Kusto Query Language queries organized by category.
 ## {{ category }}
 
 {% for query in queries if query.category == category %}
-### {{ query.name }}
-
-```kql
-{{ read_file(query.relative_path) }}
-```
-
-[:material-github: View on GitHub](https://github.com/emildosen/sentinel-toolkit/blob/main/{{ query.relative_path }}){ .md-button }
-
----
-
+- [{{ query.name }}]({{ query.category_slug }}/{{ query.slug }}.md)
 {% endfor %}
+
 {% endfor %}

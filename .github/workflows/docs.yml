@@ -47,7 +47,24 @@ jobs:
           for dir in workbooks/*/; do
             name=$(basename "$dir")
             [ -f "$dir/screenshot.png" ] && cp "$dir/screenshot.png" "docs/assets/${name}.png"
-            [ -f "$dir/README.md" ] && cp "$dir/README.md" "docs/workbooks/${name}.md"
+            if [ -f "$dir/README.md" ]; then
+              sed "s](screenshot.png)](../assets/${name}.png)]g" "$dir/README.md" > "docs/workbooks/${name}.md"
+            fi
+          done
+
+      - name: Generate query pages
+        run: |
+          find queries -name "*.kql" | while read kql; do
+            name=$(basename "$kql" .kql)
+            category=$(dirname "$kql" | xargs basename)
+            mkdir -p "docs/queries/$category"
+            echo "# ${name//-/ }" > "docs/queries/$category/${name}.md"
+            echo "" >> "docs/queries/$category/${name}.md"
+            echo '```kql' >> "docs/queries/$category/${name}.md"
+            cat "$kql" >> "docs/queries/$category/${name}.md"
+            echo '```' >> "docs/queries/$category/${name}.md"
+            echo "" >> "docs/queries/$category/${name}.md"
+            echo "[:material-github: View on GitHub](https://github.com/emildosen/sentinel-toolkit/blob/main/${kql}){ .md-button }" >> "docs/queries/$category/${name}.md"
           done
 
       - name: Build documentation
