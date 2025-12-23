@@ -48,7 +48,7 @@ jobs:
             name=$(basename "$dir")
             [ -f "$dir/screenshot.png" ] && cp "$dir/screenshot.png" "docs/assets/${name}.png"
             if [ -f "$dir/README.md" ]; then
-              sed "s](screenshot.png)](../assets/${name}.png)]g" "$dir/README.md" > "docs/workbooks/${name}.md"
+              sed -e '1s/^## /# /' -e "s](screenshot.png)](../assets/${name}.png)]g" "$dir/README.md" > "docs/workbooks/${name}.md"
               if [ -f "$dir/template.json" ]; then
                 echo "" >> "docs/workbooks/${name}.md"
                 echo "## Template" >> "docs/workbooks/${name}.md"
