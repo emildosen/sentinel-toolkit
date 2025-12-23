@@ -49,6 +49,14 @@ jobs:
             [ -f "$dir/screenshot.png" ] && cp "$dir/screenshot.png" "docs/assets/${name}.png"
             if [ -f "$dir/README.md" ]; then
               sed "s](screenshot.png)](../assets/${name}.png)]g" "$dir/README.md" > "docs/workbooks/${name}.md"
+              if [ -f "$dir/template.json" ]; then
+                echo "" >> "docs/workbooks/${name}.md"
+                echo "## Template" >> "docs/workbooks/${name}.md"
+                echo "" >> "docs/workbooks/${name}.md"
+                echo '```json' >> "docs/workbooks/${name}.md"
+                cat "$dir/template.json" >> "docs/workbooks/${name}.md"
+                echo '```' >> "docs/workbooks/${name}.md"
+              fi
             fi
           done
 
@@ -60,7 +68,7 @@ jobs:
             mkdir -p "docs/queries/$category"
             echo "# ${name//-/ }" > "docs/queries/$category/${name}.md"
             echo "" >> "docs/queries/$category/${name}.md"
-            echo '```kql' >> "docs/queries/$category/${name}.md"
+            echo '```kusto' >> "docs/queries/$category/${name}.md"
             cat "$kql" >> "docs/queries/$category/${name}.md"
             echo '```' >> "docs/queries/$category/${name}.md"
             echo "" >> "docs/queries/$category/${name}.md"

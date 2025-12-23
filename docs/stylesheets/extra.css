@@ -1,22 +1,30 @@
 /* Workbook Gallery */
 .workbook-gallery {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .workbook-gallery {
+    grid-template-columns: 1fr;
+  }
 }
 
 .workbook-card {
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 8px;
-  padding: 1.5rem;
-  background: var(--md-default-bg-color);
+  text-align: center;
+}
+
+.workbook-card h3 {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.9rem;
 }
 
 .workbook-thumbnail {
-  max-width: 100%;
-  max-height: 300px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
   border-radius: 4px;
-  border: 1px solid var(--md-default-fg-color--lightest);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -29,10 +37,6 @@
 .workbook-thumbnail.placeholder {
   opacity: 0.6;
   background: var(--md-default-fg-color--lightest);
-}
-
-.workbook-content {
-  margin-top: 1rem;
 }
 
 /* Query section styling */
