@@ -17,7 +17,7 @@ Browse the collection of Microsoft Sentinel workbooks. Click any screenshot to e
 
 <div class="workbook-content" markdown>
 
-{{ read_readme_content(workbook.readme_path) }}
+{{ read_workbook_readme(workbook.folder) }}
 
 </div>
 

@@ -8,7 +8,8 @@ from pathlib import Path
 def define_env(env):
     """Define variables, macros, and filters for MkDocs Macros plugin."""
 
-    repo_root = Path(env.project_dir).parent
+    docs_dir = Path(env.project_dir)
+    repo_root = docs_dir.parent
 
     @env.macro
     def get_workbooks():
@@ -33,9 +34,8 @@ def define_env(env):
                         "folder": item.name,
                         "folder_path": str(item.relative_to(repo_root)),
                         "has_screenshot": screenshot_path.exists(),
-                        "screenshot_path": f"../workbooks/{item.name}/screenshot.png" if screenshot_path.exists() else None,
+                        "screenshot_path": f"../assets/{item.name}.png" if screenshot_path.exists() else None,
                         "has_template": template_path.exists(),
-                        "readme_path": str(readme_path.relative_to(repo_root)),
                     })
 
         return workbooks
@@ -72,21 +72,15 @@ def define_env(env):
         return f"<!-- File not found: {path} -->"
 
     @env.macro
-    def read_readme_content(readme_path):
-        """
-        Read a workbook README and fix relative image paths.
-        """
-        file_path = repo_root / readme_path
-        if not file_path.exists():
-            return "*Documentation not found*"
-
-        content = file_path.read_text()
-
-        # Fix relative image paths to work from docs/workbooks/
-        folder_name = file_path.parent.name
-        content = content.replace(
-            "](screenshot.png)",
-            f"](../workbooks/{folder_name}/screenshot.png)"
-        )
-
-        return content
+    def read_workbook_readme(folder_name):
+        """Read a workbook README from docs/workbooks/{name}.md."""
+        readme_path = docs_dir / "workbooks" / f"{folder_name}.md"
+        if readme_path.exists():
+            content = readme_path.read_text()
+            # Fix screenshot path
+            content = content.replace(
+                "](screenshot.png)",
+                f"](../assets/{folder_name}.png)"
+            )
+            return content
+        return "*Documentation not found*"

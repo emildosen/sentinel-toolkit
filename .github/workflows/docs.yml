@@ -42,6 +42,14 @@ jobs:
           pip install --upgrade pip
           pip install mkdocs-material mkdocs-macros-plugin mkdocs-glightbox
 
+      - name: Copy workbook assets to docs
+        run: |
+          for dir in workbooks/*/; do
+            name=$(basename "$dir")
+            [ -f "$dir/screenshot.png" ] && cp "$dir/screenshot.png" "docs/assets/${name}.png"
+            [ -f "$dir/README.md" ] && cp "$dir/README.md" "docs/workbooks/${name}.md"
+          done
+
       - name: Build documentation
         run: mkdocs build --strict -f docs/mkdocs.yml
 
