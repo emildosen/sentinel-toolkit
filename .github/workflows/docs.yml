@@ -60,20 +60,13 @@ jobs:
             fi
           done
 
-      - name: Generate query pages
+      - name: Copy query pages
         run: |
-          find queries -name "*.kql" | while read kql; do
-            name=$(basename "$kql" .kql)
-            category=$(dirname "$kql" | xargs basename)
+          find queries -name "*.md" | while read md; do
+            name=$(basename "$md" .md)
+            category=$(dirname "$md" | xargs basename)
             mkdir -p "docs/queries/$category"
-            {
-              echo "# ${name//-/ }"
-              echo ""
-              echo '```kusto'
-              cat "$kql"
-              echo ""
-              echo '```'
-            } > "docs/queries/$category/${name}.md"
+            cp "$md" "docs/queries/$category/${name}.md"
           done
 
       - name: Build documentation

@@ -47,7 +47,7 @@ def define_env(env):
     @env.macro
     def get_queries():
         """
-        Scan /queries directory recursively and return list of KQL files.
+        Scan /queries directory recursively and return list of query markdown files.
         """
         queries_dir = repo_root / "queries"
         queries = []
@@ -55,16 +55,20 @@ def define_env(env):
         if not queries_dir.exists():
             return queries
 
-        for kql_file in sorted(queries_dir.rglob("*.kql")):
-            category = kql_file.parent.name if kql_file.parent != queries_dir else "General"
+        for md_file in sorted(queries_dir.rglob("*.md")):
+            category = md_file.parent.name if md_file.parent != queries_dir else "General"
+
+            # Extract title from first line of markdown (# Title)
+            first_line = md_file.read_text().split('\n')[0]
+            name = first_line.lstrip('#').strip()
 
             queries.append({
-                "name": kql_file.stem.replace("-", " ").replace("_", " ").title(),
-                "slug": kql_file.stem,
+                "name": name,
+                "slug": md_file.stem,
                 "category": category.replace("-", " ").replace("_", " ").title(),
                 "category_slug": category,
-                "file_path": str(kql_file),
-                "relative_path": str(kql_file.relative_to(repo_root)),
+                "file_path": str(md_file),
+                "relative_path": str(md_file.relative_to(repo_root)),
             })
 
         return queries
