@@ -40,3 +40,7 @@ CLAUDE.md
 
 # Reference
 _reference/
+
+# MkDocs
+docs/site/
+.cache/
