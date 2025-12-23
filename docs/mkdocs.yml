@@ -3,7 +3,7 @@ site_description: KQL queries and Azure Workbooks for Microsoft Sentinel
 site_author: Emil Dosen
 
 docs_dir: .
-site_dir: site
+site_dir: ../site
 
 theme:
   name: material

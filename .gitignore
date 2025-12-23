@@ -42,5 +42,5 @@ CLAUDE.md
 _reference/
 
 # MkDocs
-docs/site/
+site/
 .cache/
