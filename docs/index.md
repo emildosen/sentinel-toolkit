@@ -36,10 +36,10 @@ A collection of KQL queries and Azure Workbooks for Microsoft Sentinel.
 
 ### Using a KQL Query
 
-1. Navigate to **Microsoft Sentinel > Logs**
+1. Navigate to **Investigation & response > Hunting > Advanced hunting**
 2. Copy the desired `.kql` query
 3. Paste into the query editor
-4. Adjust parameters as needed and run
+4. Adjust parameters as needed and run query
 
 ## License
 
