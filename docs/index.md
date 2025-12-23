@@ -29,7 +29,7 @@ A collection of KQL queries and Azure Workbooks for Microsoft Sentinel.
 ### Installing a Workbook
 
 1. Navigate to **Microsoft Sentinel > Workbooks > Add workbook**
-2. Click **Edit** then the code editor icon `</>`
+2. Click **Edit** then **Advanced editor**
 3. Copy the contents of the desired `template.json` file
 4. Paste into the editor and click **Apply**
 5. Save the workbook
