@@ -1,4 +1,3 @@
-
 # SharePoint to OneDrive exfiltration
 
 Alert when user copies or moves data from SharePoint to OneDrive.
