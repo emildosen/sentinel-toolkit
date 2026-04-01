@@ -1,0 +1,61 @@
+/* Workbook Gallery */
+.workbook-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .workbook-gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
+.workbook-card {
+  text-align: center;
+}
+
+.workbook-card h3 {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.9rem;
+}
+
+.workbook-thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.workbook-thumbnail:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.workbook-thumbnail.placeholder {
+  opacity: 0.6;
+  background: var(--md-default-fg-color--lightest);
+}
+
+/* Query section styling */
+.md-typeset pre > code {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Card grid for home page */
+.grid.cards > ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.grid.cards > ul > li {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: 1rem;
+}
